@@ -211,21 +211,3 @@ Vercel 部署配置。它的作用是让 `/resources`、`/submit`、`/cases/...`
 5. 增加管理员审核和团队权限。
 6. 整理全部中文文案，统一 UTF-8 编码。
 7. 做 iGEM Wiki 适配版本。
-
-## 7. 给队友的协作方式
-
-推荐每个人修改前先拉取最新代码：
-
-```powershell
-git pull
-```
-
-修改后提交：
-
-```powershell
-git add .
-git commit -m "Describe your change"
-git push
-```
-
-如果多人同时修改，建议每个功能单独开分支，避免互相覆盖。

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
@@ -14,9 +14,12 @@ import {
   LogIn,
   LogOut,
   Microscope,
+  Monitor,
+  Moon,
   Plus,
   Search,
   Sparkles,
+  Sun,
   Upload,
   Users
 } from "lucide-react";
@@ -299,8 +302,30 @@ function useLocalUser() {
   return [user, setUser];
 }
 
+const themeOptions = {
+  system: { label: "跟随系统", icon: Monitor },
+  light: { label: "浅色模式", icon: Sun },
+  dark: { label: "深色模式", icon: Moon }
+};
+
+function useThemeMode() {
+  const [themeMode, setThemeModeState] = useState(() => localStorage.getItem("hpEduTheme") || "system");
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = themeMode;
+    localStorage.setItem("hpEduTheme", themeMode);
+  }, [themeMode]);
+
+  const setThemeMode = (value) => {
+    setThemeModeState(value);
+  };
+
+  return [themeMode, setThemeMode];
+}
+
 function App() {
   const [user, setUser] = useLocalUser();
+  const [themeMode, setThemeMode] = useThemeMode();
   const [resources, setResources] = useState(() => JSON.parse(localStorage.getItem("hpEduResources") || "null") || starterResources);
   const [loginOpen, setLoginOpen] = useState(false);
   const navigate = useNavigate();
@@ -324,7 +349,7 @@ function App() {
   };
 
   return (
-    <AppLayout user={user} setUser={setUser} openLogin={() => setLoginOpen(true)}>
+    <AppLayout user={user} setUser={setUser} openLogin={() => setLoginOpen(true)} themeMode={themeMode} setThemeMode={setThemeMode}>
       <Routes>
         <Route path="/" element={<HomePage resources={resources} onSubmit={requestSubmit} />} />
         <Route path="/resources" element={<ResourceLibraryPage resources={resources} onSubmit={requestSubmit} />} />
@@ -339,10 +364,10 @@ function App() {
   );
 }
 
-function AppLayout({ children, user, setUser, openLogin }) {
+function AppLayout({ children, user, setUser, openLogin, themeMode, setThemeMode }) {
   return (
     <>
-      <Header user={user} setUser={setUser} openLogin={openLogin} />
+      <Header user={user} setUser={setUser} openLogin={openLogin} themeMode={themeMode} setThemeMode={setThemeMode} />
       <main>{children}</main>
       <footer>
         <div>HP-Education 联盟</div>
@@ -352,8 +377,11 @@ function AppLayout({ children, user, setUser, openLogin }) {
   );
 }
 
-function Header({ user, setUser, openLogin }) {
+function Header({ user, setUser, openLogin, themeMode, setThemeMode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const themeOrder = ["system", "light", "dark"];
+  const nextThemeMode = themeOrder[(themeOrder.indexOf(themeMode) + 1) % themeOrder.length];
+  const ThemeIcon = themeOptions[themeMode].icon;
 
   return (
     <header className="site-header">
@@ -375,6 +403,15 @@ function Header({ user, setUser, openLogin }) {
         ))}
       </nav>
       <div className="account">
+        <button
+          className="icon-button theme-toggle"
+          type="button"
+          onClick={() => setThemeMode(nextThemeMode)}
+          aria-label={`当前：${themeOptions[themeMode].label}。切换到${themeOptions[nextThemeMode].label}`}
+          title={`当前：${themeOptions[themeMode].label}`}
+        >
+          <ThemeIcon size={18} />
+        </button>
         {user ? (
           <>
             <span className="team-pill">{user.teamName}</span>

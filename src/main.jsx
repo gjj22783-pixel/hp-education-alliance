@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
@@ -14,9 +14,12 @@ import {
   LogIn,
   LogOut,
   Microscope,
+  Monitor,
+  Moon,
   Plus,
   Search,
   Sparkles,
+  Sun,
   Upload,
   Users
 } from "lucide-react";
@@ -90,7 +93,15 @@ const categories = [
   }
 ];
 
-const materialTypes = ["PPT", "演讲稿", "阅读材料", "文创", "宣传材料", "满意度调查", "成果测量表", "实践建议", "现场照片", "材料清单", "场地条件"];
+const materialTypes = ["项目介绍书", "项目合作书", "实践建议", "现场照片", "项目 example"];
+
+const participationOptions = [
+  { value: "yes", label: "是" },
+  { value: "no", label: "否" }
+];
+
+const deliveryOptions = ["线上", "线下", "都可"];
+const audienceOptions = ["小学", "初中", "高中", "大学", "社会公众", "老年人", "通用"];
 
 const starterResources = [
   {
@@ -263,7 +274,19 @@ const campaignCases = [
   { category: "about", title: "Education Impact Report", subtitle: "年度教育成果报告", image: imageAssets.students, format: "成果展示", impact: "面向评审与伙伴", materials: ["数据看板", "现场照片", "案例摘要"] }
 ];
 
-const navItems = [{ path: "/", name: "首页" }, ...categories.map(({ path, name }) => ({ path, name }))];
+const navItems = [
+  { path: "/", name: "首页" },
+  ...categories.map(({ path, name }) => ({ path, name })),
+  { path: "/submit", name: "教育项目招募" }
+];
+
+const projectMetaByCategory = {
+  synbio: { organization: "HP-Education 联盟", kind: "长期项目", delivery: "线上/线下", region: "杭州", duration: "90 分钟", venue: "教室 / 实验室" },
+  applications: { organization: "ZJU iGEM", kind: "时限项目", delivery: "线下", region: "杭州", duration: "半日", venue: "展台" },
+  activities: { organization: "Westlake iGEM", kind: "短期项目", delivery: "线下", region: "杭州", duration: "2 小时", venue: "开放空间" },
+  cooperation: { organization: "支教合作组", kind: "长期项目", delivery: "线上+线下", region: "浙江", duration: "4 课时", venue: "合作学校" },
+  about: { organization: "联盟运营组", kind: "长期项目", delivery: "线上", region: "通用", duration: "全年", venue: "线上会议" }
+};
 
 function caseSlug(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -279,8 +302,30 @@ function useLocalUser() {
   return [user, setUser];
 }
 
+const themeOptions = {
+  system: { label: "跟随系统", icon: Monitor },
+  light: { label: "浅色模式", icon: Sun },
+  dark: { label: "深色模式", icon: Moon }
+};
+
+function useThemeMode() {
+  const [themeMode, setThemeModeState] = useState(() => localStorage.getItem("hpEduTheme") || "system");
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = themeMode;
+    localStorage.setItem("hpEduTheme", themeMode);
+  }, [themeMode]);
+
+  const setThemeMode = (value) => {
+    setThemeModeState(value);
+  };
+
+  return [themeMode, setThemeMode];
+}
+
 function App() {
   const [user, setUser] = useLocalUser();
+  const [themeMode, setThemeMode] = useThemeMode();
   const [resources, setResources] = useState(() => JSON.parse(localStorage.getItem("hpEduResources") || "null") || starterResources);
   const [loginOpen, setLoginOpen] = useState(false);
   const navigate = useNavigate();
@@ -304,7 +349,7 @@ function App() {
   };
 
   return (
-    <AppLayout user={user} setUser={setUser} openLogin={() => setLoginOpen(true)}>
+    <AppLayout user={user} setUser={setUser} openLogin={() => setLoginOpen(true)} themeMode={themeMode} setThemeMode={setThemeMode}>
       <Routes>
         <Route path="/" element={<HomePage resources={resources} onSubmit={requestSubmit} />} />
         <Route path="/resources" element={<ResourceLibraryPage resources={resources} onSubmit={requestSubmit} />} />
@@ -319,10 +364,10 @@ function App() {
   );
 }
 
-function AppLayout({ children, user, setUser, openLogin }) {
+function AppLayout({ children, user, setUser, openLogin, themeMode, setThemeMode }) {
   return (
     <>
-      <Header user={user} setUser={setUser} openLogin={openLogin} />
+      <Header user={user} setUser={setUser} openLogin={openLogin} themeMode={themeMode} setThemeMode={setThemeMode} />
       <main>{children}</main>
       <footer>
         <div>HP-Education 联盟</div>
@@ -332,8 +377,11 @@ function AppLayout({ children, user, setUser, openLogin }) {
   );
 }
 
-function Header({ user, setUser, openLogin }) {
+function Header({ user, setUser, openLogin, themeMode, setThemeMode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const themeOrder = ["system", "light", "dark"];
+  const nextThemeMode = themeOrder[(themeOrder.indexOf(themeMode) + 1) % themeOrder.length];
+  const ThemeIcon = themeOptions[themeMode].icon;
 
   return (
     <header className="site-header">
@@ -355,6 +403,15 @@ function Header({ user, setUser, openLogin }) {
         ))}
       </nav>
       <div className="account">
+        <button
+          className="icon-button theme-toggle"
+          type="button"
+          onClick={() => setThemeMode(nextThemeMode)}
+          aria-label={`当前：${themeOptions[themeMode].label}。切换到${themeOptions[nextThemeMode].label}`}
+          title={`当前：${themeOptions[themeMode].label}`}
+        >
+          <ThemeIcon size={18} />
+        </button>
         {user ? (
           <>
             <span className="team-pill">{user.teamName}</span>
@@ -387,7 +444,7 @@ function HomePage({ resources, onSubmit }) {
           </p>
           <div className="hero-actions">
             <button className="primary-action" type="button" onClick={() => onSubmit()}>
-              <Plus size={18} /> 提交教育资源
+              <Plus size={18} /> 教育项目招募
             </button>
             <Link className="secondary-action" to="/resources">
               浏览资源库 <ArrowRight size={18} />
@@ -456,7 +513,8 @@ function ResourceLibraryPage({ resources, onSubmit }) {
   const location = useLocation();
   const initialCategory = new URLSearchParams(location.search).get("category") || "all";
   const [filters, setFilters] = useState({ category: initialCategory, material: "all", team: "", audience: "" });
-  const teams = useMemo(() => [...new Set(resources.map((item) => item.team))], [resources]);
+  const teams = useMemo(() => ["联盟运营组"], []);
+  const resourceMaterialOptions = useMemo(() => [...new Set([...materialTypes, ...resources.flatMap((item) => item.materials)])], [resources]);
   const filtered = resources.filter((item) => {
     const categoryOk = filters.category === "all" || item.category === filters.category;
     const materialOk = filters.material === "all" || item.materials.includes(filters.material);
@@ -476,7 +534,7 @@ function ResourceLibraryPage({ resources, onSubmit }) {
           <p>筛选、浏览和复用联盟内已有的教育材料。</p>
         </div>
         <button className="primary-action compact" type="button" onClick={() => onSubmit()}>
-          <Upload size={17} /> 提交资源
+          <Upload size={17} /> 教育项目招募
         </button>
       </div>
 
@@ -491,10 +549,10 @@ function ResourceLibraryPage({ resources, onSubmit }) {
           </select>
         </label>
         <label>
-          材料类型
+          项目材料
           <select name="material" value={filters.material} onChange={update}>
             <option value="all">全部材料</option>
-            {materialTypes.map((material) => (
+            {resourceMaterialOptions.map((material) => (
               <option key={material} value={material}>{material}</option>
             ))}
           </select>
@@ -522,7 +580,7 @@ function ResourceLibraryPage({ resources, onSubmit }) {
           <ResourceCard key={resource.id} resource={resource} />
         ))}
       </div>
-      {!filtered.length && <p className="empty-state">没有匹配资源，可以调整筛选或提交新的教育资源。</p>}
+      {!filtered.length && <p className="empty-state">没有匹配资源，可以调整筛选或发布新的教育项目招募。</p>}
     </section>
   );
 }
@@ -532,8 +590,8 @@ function LoginRequiredPage({ openLogin }) {
     <section className="page-shell login-required">
       <div>
         <p className="eyebrow">Login Required</p>
-        <h1>登录后提交教育资源</h1>
-        <p>资源提交入口不放在主导航里。请先登录团队账号，然后从首页、资源库或栏目页进入提交流程。</p>
+        <h1>登录后发布教育项目招募</h1>
+        <p>请先登录团队账号，然后从顶部导航、首页、资源库或栏目页进入教育项目招募发布流程。</p>
         <button className="primary-action" type="button" onClick={openLogin}>
           <LogIn size={18} /> 团队登录
         </button>
@@ -562,10 +620,10 @@ function CategoryPage({ category, resources, onSubmit }) {
       </div>
 
       <section className="case-section">
-        <SectionTitle title="宣传案例展示" desc="每个案例都按真实活动宣传方式组织，方便向合作队伍说明栏目价值。" />
+        <SectionTitle title="教育项目" desc="每个项目都按真实招募信息组织，方便合作队伍快速判断是否适合参与。" />
         <div className="campaign-grid">
           {cases.map((item) => (
-            <CampaignCard key={item.title} item={item} />
+            <CampaignCard key={item.title} item={item} variant="project" />
           ))}
         </div>
       </section>
@@ -579,7 +637,7 @@ function CategoryPage({ category, resources, onSubmit }) {
             ))}
           </div>
           <button className="secondary-submit" type="button" onClick={() => onSubmit(category.id)}>
-            为本栏目提交资源
+            发布本栏目项目招募
           </button>
         </aside>
         <div>
@@ -595,7 +653,40 @@ function CategoryPage({ category, resources, onSubmit }) {
   );
 }
 
-function CampaignCard({ item }) {
+function CampaignCard({ item, variant = "case" }) {
+  const meta = projectMetaByCategory[item.category] || projectMetaByCategory.synbio;
+  const project = {
+    organization: item.organization || meta.organization,
+    kind: item.kind || meta.kind,
+    delivery: item.delivery || meta.delivery,
+    region: item.region || meta.region,
+    duration: item.duration || meta.duration,
+    venue: item.venue || meta.venue
+  };
+
+  if (variant === "project") {
+    return (
+      <Link className="campaign-card project-card" to={`/cases/${caseSlug(item.title)}`}>
+        <img src={item.image} alt="" />
+        <div>
+          <p className="project-org">{project.organization}</p>
+          <h3>{item.title}</h3>
+          <p className="project-subtitle">{item.subtitle}</p>
+          <div className="project-quick-info">
+            <span>{project.kind}</span>
+            <strong>{project.delivery}</strong>
+          </div>
+          <div className="project-meta-pills">
+            <span>{project.region}</span>
+            <span>{project.duration}</span>
+            <span>{project.venue}</span>
+          </div>
+          <span className="detail-link">查看项目详情</span>
+        </div>
+      </Link>
+    );
+  }
+
   return (
     <Link className="campaign-card" to={`/cases/${caseSlug(item.title)}`}>
       <img src={item.image} alt="" />
@@ -661,7 +752,7 @@ function CaseDetailPage({ onSubmit }) {
             ))}
           </div>
           <button className="primary-action compact" type="button" onClick={() => onSubmit(item.category)}>
-            为本栏目提交资源
+            发布本栏目项目招募
           </button>
         </aside>
       </div>
@@ -674,6 +765,7 @@ function SubmitResourcePage({ user, addResource }) {
   const params = new URLSearchParams(location.search);
   const [selected, setSelected] = useState([]);
   const [files, setFiles] = useState({});
+  const [durationMode, setDurationMode] = useState("");
   const defaultCategory = params.get("category") || "synbio";
 
   const toggleMaterial = (material) => {
@@ -684,10 +776,21 @@ function SubmitResourcePage({ user, addResource }) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const uploaded = Object.entries(files).filter(([, name]) => name).map(([type, name]) => `${type}: ${name}`);
+    const duration = data.get("durationMode") === "limited"
+      ? `${data.get("startDate")} 至 ${data.get("endDate")}`
+      : "长期可行";
     addResource({
       category: data.get("category"),
       team: data.get("team"),
+      organization: data.get("team"),
       title: data.get("title"),
+      negotiator: data.get("negotiator"),
+      acceptsOthers: data.get("acceptsOthers"),
+      delivery: data.get("delivery"),
+      duration,
+      location: data.get("location"),
+      reimbursement: data.get("reimbursement"),
+      contact: data.get("contact"),
       audience: data.get("audience"),
       desc: `${data.get("desc")}${uploaded.length ? ` 已上传：${uploaded.join("；")}` : ""}`,
       materials: selected
@@ -699,16 +802,17 @@ function SubmitResourcePage({ user, addResource }) {
       <div className="page-heading">
         <div>
           <p className="eyebrow">Submit</p>
-          <h1>提交教育资源</h1>
-          <p>当前登录团队：{user.teamName}。Demo 阶段只记录材料信息和文件名。</p>
+          <h1>教育项目招募</h1>
+          <p>当前登录团队：{user.teamName}。Demo 阶段只记录项目招募信息和文件名。</p>
         </div>
       </div>
 
       <form className="submit-form" onSubmit={submit}>
         <div className="form-grid">
-          <label>队伍名称<input name="team" required defaultValue={user.teamName} /></label>
-          <label>活动主题<input name="title" required placeholder="例如：合成生物学是什么？" /></label>
-          <label>
+          <label>机构名称<input name="team" required defaultValue={user.teamName} /></label>
+          <label>项目名称<input name="title" required placeholder="例如：合成生物学是什么？" /></label>
+          <label>主要洽谈队伍<input name="negotiator" required placeholder="例如：Westlake iGEM / ZJU iGEM" /></label>
+          <label className="category-field">
             所属栏目
             <select name="category" defaultValue={defaultCategory}>
               {categories.map((category) => (
@@ -716,8 +820,74 @@ function SubmitResourcePage({ user, addResource }) {
               ))}
             </select>
           </label>
-          <label>目标受众<input name="audience" required placeholder="例如：高中生 / 社区公众" /></label>
-          <label className="wide">活动简介<textarea name="desc" required placeholder="简要说明活动内容、形式和教育目标" /></label>
+          <fieldset className="choice-group participation-group">
+            <legend>是否接受其他队伍参与</legend>
+            <div>
+              {participationOptions.map((option) => (
+                <label key={option.value}>
+                  <input type="radio" name="acceptsOthers" value={option.value} required />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset className="choice-group delivery-group">
+            <legend>线上/线下要求</legend>
+            <div>
+              {deliveryOptions.map((option) => (
+                <label key={option}>
+                  <input type="radio" name="delivery" value={option} required />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <label className="audience-field">
+            目标受众
+            <select name="audience" required defaultValue="">
+              <option value="" disabled>请选择目标受众</option>
+              {audienceOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+          <fieldset className="choice-group duration-group">
+            <legend>活动时限</legend>
+            <div>
+              <label>
+                <input
+                  type="radio"
+                  name="durationMode"
+                  value="limited"
+                  required
+                  checked={durationMode === "limited"}
+                  onChange={(event) => setDurationMode(event.target.value)}
+                />
+                有时限
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="durationMode"
+                  value="long"
+                  required
+                  checked={durationMode === "long"}
+                  onChange={(event) => setDurationMode(event.target.value)}
+                />
+                长期可行
+              </label>
+            </div>
+            {durationMode === "limited" && (
+              <div className="date-range">
+                <label>开始日期<input type="date" name="startDate" required /></label>
+                <label>结束日期<input type="date" name="endDate" required /></label>
+              </div>
+            )}
+          </fieldset>
+          <label className="location-field">活动地点<input name="location" required placeholder="填写国家、省份和城市" /></label>
+          <label className="reimbursement-field">报销情况<input name="reimbursement" required placeholder="例如：交通可报销 / 不报销 / 待确认" /></label>
+          <label className="contact-field">机构联系方式<input name="contact" required placeholder="邮箱、微信或联系人电话" /></label>
+          <label className="desc-field wide">活动简介和要求<textarea name="desc" required placeholder="简要说明活动内容、形式、教育目标和合作要求" /></label>
         </div>
 
         <MaterialChecklist selected={selected} onToggle={toggleMaterial} />
@@ -735,7 +905,7 @@ function SubmitResourcePage({ user, addResource }) {
 
         <div className="form-actions">
           <Link className="secondary-action" to="/resources">取消</Link>
-          <button className="primary-action compact" type="submit" disabled={!selected.length}>提交资源</button>
+          <button className="primary-action compact" type="submit" disabled={!selected.length}>发布招募</button>
         </div>
       </form>
     </section>
@@ -782,6 +952,14 @@ function ResourceCard({ resource }) {
       <h3>{resource.title}</h3>
       <p className="meta">{resource.team} · {resource.audience}</p>
       <p>{resource.desc}</p>
+      {(resource.delivery || resource.location || resource.duration || resource.reimbursement) && (
+        <dl className="project-details">
+          {resource.delivery && <div><dt>参与形式</dt><dd>{resource.delivery}</dd></div>}
+          {resource.location && <div><dt>地区</dt><dd>{resource.location}</dd></div>}
+          {resource.duration && <div><dt>时限</dt><dd>{resource.duration}</dd></div>}
+          {resource.reimbursement && <div><dt>报销</dt><dd>{resource.reimbursement}</dd></div>}
+        </dl>
+      )}
       <div className="progress"><span style={{ width: `${pct}%` }} /></div>
       <div className="tags">
         {resource.materials.map((material) => (
@@ -795,7 +973,7 @@ function ResourceCard({ resource }) {
 function MaterialChecklist({ selected, onToggle }) {
   return (
     <section className="material-checklist">
-      <h2>材料类型</h2>
+      <h2>项目材料</h2>
       <div>
         {materialTypes.map((material) => (
           <label key={material} className={selected.includes(material) ? "material active" : "material"}>
@@ -813,7 +991,7 @@ function StatsPanel({ resources }) {
     <section className="stats-panel">
       <div><strong>{resources.length}</strong><span>已收录资源</span></div>
       <div><strong>{categories.length}</strong><span>核心栏目</span></div>
-      <div><strong>{materialTypes.length}</strong><span>材料类型</span></div>
+      <div><strong>{materialTypes.length}</strong><span>项目材料</span></div>
       <div><strong>2+</strong><span>高校团队</span></div>
     </section>
   );

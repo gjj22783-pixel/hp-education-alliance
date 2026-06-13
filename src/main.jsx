@@ -26,13 +26,13 @@ import {
 import "./styles.css";
 
 const imageAssets = {
-  students: "https://images.pexels.com/photos/6208726/pexels-photo-6208726.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  petri: "https://images.pexels.com/photos/8940354/pexels-photo-8940354.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  classroom: "https://images.pexels.com/photos/5427666/pexels-photo-5427666.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  microscope: "https://images.pexels.com/photos/5726835/pexels-photo-5726835.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  labTeam: "https://images.pexels.com/photos/9243720/pexels-photo-9243720.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  labWork: "https://images.pexels.com/photos/6129868/pexels-photo-6129868.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  alliance: "https://images.unsplash.com/photo-1642675363311-3e1904dc1885?auto=format&fit=crop&w=1600&q=80"
+  students: "/images/students.jpg",
+  petri: "/images/petri.jpg",
+  classroom: "/images/classroom.jpg",
+  microscope: "/images/microscope.jpg",
+  labTeam: "/images/lab-team.jpg",
+  labWork: "/images/lab-work.jpg",
+  alliance: "/images/alliance.jpg"
 };
 
 const categories = [

@@ -110,7 +110,7 @@ body::before {
   z-index: -1;
   background:
     linear-gradient(var(--bg-overlay), var(--bg-overlay-strong)),
-    url("https://images.pexels.com/photos/6208726/pexels-photo-6208726.jpeg?auto=compress&cs=tinysrgb&w=1800") center/cover;
+    url("/images/students.jpg") center/cover;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -197,7 +197,7 @@ main { width: min(1200px, 92vw); margin: 0 auto; padding: 2.2rem 0 4rem; }
   z-index: -1;
   border-radius: 8px;
   opacity: .18;
-  background: url("https://images.pexels.com/photos/9243720/pexels-photo-9243720.jpeg?auto=compress&cs=tinysrgb&w=1600") center/cover;
+  background: url("/images/lab-team.jpg") center/cover;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.7);
 }
 
@@ -297,7 +297,7 @@ p { color: var(--muted); line-height: 1.72; }
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(16,37,34,.88), rgba(18,95,81,.72)),
-    url("https://images.pexels.com/photos/8940354/pexels-photo-8940354.jpeg?auto=compress&cs=tinysrgb&w=1600") center/cover;
+    url("/images/petri.jpg") center/cover;
   color: white;
   box-shadow: var(--shadow);
 }
